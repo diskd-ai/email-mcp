@@ -1,7 +1,7 @@
 {
-  "name": "@codefuturist/email-mcp",
-  "version": "0.2.1",
-  "mcpName": "io.github.codefuturist/email-mcp",
+  "name": "@diskd-ai/email-mcp",
+  "version": "0.3.0",
+  "mcpName": "io.github.diskd-ai/email-mcp",
   "description": "Email MCP server with IMAP + SMTP support",
   "type": "module",
   "bin": {
@@ -12,6 +12,9 @@
   "files": [
     "dist"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "dev": "tsx watch src/main.ts",
     "build": "tsc -p tsconfig.build.json",
