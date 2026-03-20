@@ -1,10 +1,14 @@
-# Email MCP Server
+# Email MCP Server (diskd-ai fork)
 
-[![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
-[![license](https://img.shields.io/github/license/codefuturist/email-mcp.svg?style=flat-square)](LICENSE)
-[![npm version](https://img.shields.io/npm/v/@codefuturist/email-mcp.svg?style=flat-square)](https://www.npmjs.com/package/@codefuturist/email-mcp)
-[![npm downloads](https://img.shields.io/npm/dm/@codefuturist/email-mcp.svg?style=flat-square)](https://www.npmjs.com/package/@codefuturist/email-mcp)
-[![CI](https://img.shields.io/github/actions/workflow/status/codefuturist/email-mcp/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/codefuturist/email-mcp/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/@diskd-ai/email-mcp.svg?style=flat-square)](https://www.npmjs.com/package/@diskd-ai/email-mcp)
+[![license](https://img.shields.io/github/license/diskd-ai/email-mcp.svg?style=flat-square)](LICENSE)
+[![upstream](https://img.shields.io/badge/upstream-codefuturist%2Femail--mcp-blue?style=flat-square)](https://github.com/codefuturist/email-mcp)
+
+> **Fork of [codefuturist/email-mcp](https://github.com/codefuturist/email-mcp)** with the following additions:
+>
+> - **Webhook payload includes `uid`, `folder`, `hasAttachments`** -- enables consumers to fetch full email content via `get_email` after receiving an alert ([upstream PR #18](https://github.com/codefuturist/email-mcp/pull/18))
+>
+> Install: `npx -y @diskd-ai/email-mcp stdio`
 
 An MCP (Model Context Protocol) server providing comprehensive email capabilities via IMAP and SMTP.
 
@@ -64,14 +68,14 @@ Requires Node.js ≥ 22.
 
 ```bash
 # Run directly (no install needed)
-npx @codefuturist/email-mcp setup
+npx @diskd-ai/email-mcp setup
 # or
-pnpm dlx @codefuturist/email-mcp setup
+pnpm dlx @diskd-ai/email-mcp setup
 
 # Or install globally
-npm install -g @codefuturist/email-mcp
+npm install -g @diskd-ai/email-mcp
 # or
-pnpm add -g @codefuturist/email-mcp
+pnpm add -g @diskd-ai/email-mcp
 ```
 
 ### Docker
@@ -101,7 +105,7 @@ docker build -t ghcr.io/codefuturist/email-mcp .
 > **Tag convention:** Tags follow bare semver (no `v` prefix), matching Docker ecosystem standards (e.g. `node:24`, `nginx:1.25`). The `latest` tag is only updated on stable releases, never pre-releases.
 
 > **Note:** The server uses stdio transport. Config must be created on the host first
-> (via `npx @codefuturist/email-mcp setup` or manually) and mounted into the container.
+> (via `npx @diskd-ai/email-mcp setup` or manually) and mounted into the container.
 
 ## Usage
 
@@ -147,7 +151,7 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) o
   "mcpServers": {
     "email": {
       "command": "npx",
-      "args": ["-y", "@codefuturist/email-mcp", "stdio"]
+      "args": ["-y", "@diskd-ai/email-mcp", "stdio"]
     }
   }
 }
@@ -170,7 +174,7 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) o
     "email": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@codefuturist/email-mcp", "stdio"]
+      "args": ["-y", "@diskd-ai/email-mcp", "stdio"]
     }
   }
 }
@@ -187,7 +191,7 @@ Open the Command Palette → **Preferences: Open User Settings (JSON)** and add:
       "email": {
         "type": "stdio",
         "command": "npx",
-        "args": ["-y", "@codefuturist/email-mcp", "stdio"]
+        "args": ["-y", "@diskd-ai/email-mcp", "stdio"]
       }
     }
   }
@@ -205,7 +209,7 @@ Edit `~/.cursor/mcp.json`:
   "mcpServers": {
     "email": {
       "command": "npx",
-      "args": ["-y", "@codefuturist/email-mcp", "stdio"]
+      "args": ["-y", "@diskd-ai/email-mcp", "stdio"]
     }
   }
 }
@@ -222,7 +226,7 @@ Edit `~/.codeium/windsurf/mcp_config.json`:
   "mcpServers": {
     "email": {
       "command": "npx",
-      "args": ["-y", "@codefuturist/email-mcp", "stdio"]
+      "args": ["-y", "@diskd-ai/email-mcp", "stdio"]
     }
   }
 }
@@ -240,7 +244,7 @@ Edit `~/.config/zed/settings.json`:
     "email": {
       "command": {
         "path": "npx",
-        "args": ["-y", "@codefuturist/email-mcp", "stdio"]
+        "args": ["-y", "@diskd-ai/email-mcp", "stdio"]
       }
     }
   }
@@ -258,7 +262,7 @@ Add to `~/.vibe/config.toml`:
 name = "email-mcp"
 transport = "stdio"
 command = "npx"
-args = ["-y", "@codefuturist/email-mcp", "stdio"]
+args = ["-y", "@diskd-ai/email-mcp", "stdio"]
 ```
 
 To pass credentials directly instead of using a config file, use the `env` field:
@@ -268,7 +272,7 @@ To pass credentials directly instead of using a config file, use the `env` field
 name = "email-mcp"
 transport = "stdio"
 command = "npx"
-args = ["-y", "@codefuturist/email-mcp", "stdio"]
+args = ["-y", "@diskd-ai/email-mcp", "stdio"]
 env = { "EMAIL_ACCOUNTS" = "<your-accounts-json>" }
 ```
 
@@ -313,7 +317,7 @@ For MCP client configuration (e.g. Claude Desktop):
   "mcpServers": {
     "email": {
       "command": "npx",
-      "args": ["-y", "@codefuturist/email-mcp", "stdio"],
+      "args": ["-y", "@diskd-ai/email-mcp", "stdio"],
       "env": {
         "MCP_EMAIL_ADDRESS": "you@gmail.com",
         "MCP_EMAIL_PASSWORD": "your-app-password",
