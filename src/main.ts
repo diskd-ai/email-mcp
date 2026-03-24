@@ -12,7 +12,7 @@
 
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 
-import { loadConfig } from './config/loader.js';
+import { ConfigurationError, loadConfig } from './config/loader.js';
 import ConnectionManager from './connections/manager.js';
 import { bindServer, markInitialized, mcpLog } from './logging.js';
 import registerAllPrompts from './prompts/register.js';
@@ -242,7 +242,10 @@ async function main(): Promise<void> {
   }
 }
 
+/** Exit code 78 (EX_CONFIG from sysexits.h): configuration error */
+const EX_CONFIG = 78;
+
 main().catch((err) => {
   console.error('Fatal error:', err instanceof Error ? err.message : String(err));
-  process.exitCode = 1;
+  process.exitCode = err instanceof ConfigurationError ? EX_CONFIG : 1;
 });

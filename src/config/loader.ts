@@ -13,6 +13,18 @@ import type { RawAccountConfig, RawAppConfig } from './schema.js';
 import { AppConfigFileSchema } from './schema.js';
 import { CONFIG_FILE, xdg } from './xdg.js';
 
+/**
+ * Thrown when no valid configuration is found (env vars or config file).
+ * The process should exit with code 78 (EX_CONFIG) to signal that the
+ * server cannot start due to missing configuration, not a runtime error.
+ */
+export class ConfigurationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ConfigurationError';
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Environment variable loader (single-account quick setup)
 // ---------------------------------------------------------------------------
@@ -278,7 +290,7 @@ export async function loadConfig(configPath?: string): Promise<AppConfig> {
     return normalizeConfig(validated);
   }
 
-  throw new Error(
+  throw new ConfigurationError(
     `No configuration found.\n\n` +
       `Set environment variables (MCP_EMAIL_ADDRESS, MCP_EMAIL_PASSWORD, etc.)\n` +
       `or create a config file at: ${configPath ?? CONFIG_FILE}\n\n` +
