@@ -7,7 +7,7 @@
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-
+import { toolErrorResponse } from '../domain/error-codes.js';
 import type ImapService from '../services/imap.service.js';
 
 // ---------------------------------------------------------------------------
@@ -163,15 +163,7 @@ export default function registerThreadTools(server: McpServer, imapService: Imap
           content: [{ type: 'text' as const, text: parts.join('\n') }],
         };
       } catch (err) {
-        return {
-          isError: true,
-          content: [
-            {
-              type: 'text' as const,
-              text: `Failed to get thread: ${err instanceof Error ? err.message : String(err)}`,
-            },
-          ],
-        };
+        return toolErrorResponse(err, { tool: 'get_thread', account, protocol: 'imap' });
       }
     },
   );

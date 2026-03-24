@@ -8,6 +8,7 @@
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { toolErrorResponse } from '../domain/error-codes.js';
 
 import type ImapService from '../services/imap.service.js';
 
@@ -59,16 +60,7 @@ export default function registerLocateTools(server: McpServer, imapService: Imap
           content: [{ type: 'text' as const, text: lines.join('\n') }],
         };
       } catch (err) {
-        const errMsg = err instanceof Error ? err.message : String(err);
-        return {
-          isError: true,
-          content: [
-            {
-              type: 'text' as const,
-              text: `Failed to locate email: ${errMsg}`,
-            },
-          ],
-        };
+        return toolErrorResponse(err, { tool: 'find_email_folder', account, protocol: 'imap' });
       }
     },
   );

@@ -4,6 +4,7 @@
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { classifyError, toolErrorResponse } from '../domain/error-codes.js';
 import audit from '../safety/audit.js';
 import { validateInputLength } from '../safety/validation.js';
 
@@ -46,23 +47,23 @@ export default function registerSendTools(server: McpServer, smtpService: SmtpSe
           ],
         };
       } catch (err) {
-        const errMsg = err instanceof Error ? err.message : String(err);
+        const classified = classifyError(err, {
+          tool: 'send_email',
+          account: params.account,
+          protocol: 'smtp',
+        });
         await audit.log(
           'send_email',
           params.account,
           { to: params.to, subject: params.subject },
           'error',
-          errMsg,
+          classified.message,
         );
-        return {
-          isError: true,
-          content: [
-            {
-              type: 'text' as const,
-              text: `Failed to send email: ${errMsg}`,
-            },
-          ],
-        };
+        return toolErrorResponse(err, {
+          tool: 'send_email',
+          account: params.account,
+          protocol: 'smtp',
+        });
       }
     },
   );
@@ -100,23 +101,23 @@ export default function registerSendTools(server: McpServer, smtpService: SmtpSe
           ],
         };
       } catch (err) {
-        const errMsg = err instanceof Error ? err.message : String(err);
+        const classified = classifyError(err, {
+          tool: 'reply_email',
+          account: params.account,
+          protocol: 'smtp',
+        });
         await audit.log(
           'reply_email',
           params.account,
           { emailId: params.emailId, mailbox: params.mailbox },
           'error',
-          errMsg,
+          classified.message,
         );
-        return {
-          isError: true,
-          content: [
-            {
-              type: 'text' as const,
-              text: `Failed to reply: ${errMsg}`,
-            },
-          ],
-        };
+        return toolErrorResponse(err, {
+          tool: 'reply_email',
+          account: params.account,
+          protocol: 'smtp',
+        });
       }
     },
   );
@@ -154,23 +155,23 @@ export default function registerSendTools(server: McpServer, smtpService: SmtpSe
           ],
         };
       } catch (err) {
-        const errMsg = err instanceof Error ? err.message : String(err);
+        const classified = classifyError(err, {
+          tool: 'forward_email',
+          account: params.account,
+          protocol: 'smtp',
+        });
         await audit.log(
           'forward_email',
           params.account,
           { to: params.to, emailId: params.emailId },
           'error',
-          errMsg,
+          classified.message,
         );
-        return {
-          isError: true,
-          content: [
-            {
-              type: 'text' as const,
-              text: `Failed to forward: ${errMsg}`,
-            },
-          ],
-        };
+        return toolErrorResponse(err, {
+          tool: 'forward_email',
+          account: params.account,
+          protocol: 'smtp',
+        });
       }
     },
   );

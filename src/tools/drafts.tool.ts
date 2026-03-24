@@ -4,6 +4,7 @@
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { classifyError, toolErrorResponse } from '../domain/error-codes.js';
 import audit from '../safety/audit.js';
 
 import type ImapService from '../services/imap.service.js';
@@ -57,17 +58,9 @@ export default function registerDraftTools(
           ],
         };
       } catch (err) {
-        const errMsg = err instanceof Error ? err.message : String(err);
-        await audit.log('save_draft', account, { to, subject }, 'error', errMsg);
-        return {
-          isError: true,
-          content: [
-            {
-              type: 'text' as const,
-              text: `Failed to save draft: ${errMsg}`,
-            },
-          ],
-        };
+        const classified = classifyError(err, { tool: 'save_draft', account, protocol: 'smtp' });
+        await audit.log('save_draft', account, { to, subject }, 'error', classified.message);
+        return toolErrorResponse(err, { tool: 'save_draft', account, protocol: 'smtp' });
       }
     },
   );
@@ -99,17 +92,9 @@ export default function registerDraftTools(
           ],
         };
       } catch (err) {
-        const errMsg = err instanceof Error ? err.message : String(err);
-        await audit.log('send_draft', account, { id, mailbox }, 'error', errMsg);
-        return {
-          isError: true,
-          content: [
-            {
-              type: 'text' as const,
-              text: `Failed to send draft: ${errMsg}`,
-            },
-          ],
-        };
+        const classified = classifyError(err, { tool: 'send_draft', account, protocol: 'smtp' });
+        await audit.log('send_draft', account, { id, mailbox }, 'error', classified.message);
+        return toolErrorResponse(err, { tool: 'send_draft', account, protocol: 'smtp' });
       }
     },
   );

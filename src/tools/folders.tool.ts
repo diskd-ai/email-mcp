@@ -4,6 +4,7 @@
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { classifyError, toolErrorResponse } from '../domain/error-codes.js';
 import audit from '../safety/audit.js';
 
 import type ImapService from '../services/imap.service.js';
@@ -36,17 +37,19 @@ export default function registerFolderTools(server: McpServer, imapService: Imap
           ],
         };
       } catch (err) {
-        const errMsg = err instanceof Error ? err.message : String(err);
-        await audit.log('create_mailbox', account, { path: folderPath }, 'error', errMsg);
-        return {
-          isError: true,
-          content: [
-            {
-              type: 'text' as const,
-              text: `Failed to create mailbox: ${errMsg}`,
-            },
-          ],
-        };
+        const classified = classifyError(err, {
+          tool: 'create_mailbox',
+          account,
+          protocol: 'imap',
+        });
+        await audit.log(
+          'create_mailbox',
+          account,
+          { path: folderPath },
+          'error',
+          classified.message,
+        );
+        return toolErrorResponse(err, { tool: 'create_mailbox', account, protocol: 'imap' });
       }
     },
   );
@@ -76,23 +79,19 @@ export default function registerFolderTools(server: McpServer, imapService: Imap
           ],
         };
       } catch (err) {
-        const errMsg = err instanceof Error ? err.message : String(err);
+        const classified = classifyError(err, {
+          tool: 'rename_mailbox',
+          account,
+          protocol: 'imap',
+        });
         await audit.log(
           'rename_mailbox',
           account,
           { path: folderPath, new_path: newPath },
           'error',
-          errMsg,
+          classified.message,
         );
-        return {
-          isError: true,
-          content: [
-            {
-              type: 'text' as const,
-              text: `Failed to rename mailbox: ${errMsg}`,
-            },
-          ],
-        };
+        return toolErrorResponse(err, { tool: 'rename_mailbox', account, protocol: 'imap' });
       }
     },
   );
@@ -121,17 +120,19 @@ export default function registerFolderTools(server: McpServer, imapService: Imap
           ],
         };
       } catch (err) {
-        const errMsg = err instanceof Error ? err.message : String(err);
-        await audit.log('delete_mailbox', account, { path: folderPath }, 'error', errMsg);
-        return {
-          isError: true,
-          content: [
-            {
-              type: 'text' as const,
-              text: `Failed to delete mailbox: ${errMsg}`,
-            },
-          ],
-        };
+        const classified = classifyError(err, {
+          tool: 'delete_mailbox',
+          account,
+          protocol: 'imap',
+        });
+        await audit.log(
+          'delete_mailbox',
+          account,
+          { path: folderPath },
+          'error',
+          classified.message,
+        );
+        return toolErrorResponse(err, { tool: 'delete_mailbox', account, protocol: 'imap' });
       }
     },
   );

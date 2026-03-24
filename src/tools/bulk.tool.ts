@@ -4,6 +4,7 @@
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { classifyError, toolErrorResponse } from '../domain/error-codes.js';
 import audit from '../safety/audit.js';
 
 import type ImapService from '../services/imap.service.js';
@@ -74,23 +75,15 @@ export default function registerBulkTools(server: McpServer, imapService: ImapSe
           ],
         };
       } catch (err) {
-        const errMsg = err instanceof Error ? err.message : String(err);
+        const classified = classifyError(err, { tool: 'bulk_action', account, protocol: 'imap' });
         await audit.log(
           'bulk_action',
           account,
           { mailbox, action, ids: ids.length },
           'error',
-          errMsg,
+          classified.message,
         );
-        return {
-          isError: true,
-          content: [
-            {
-              type: 'text' as const,
-              text: `Bulk action failed: ${errMsg}`,
-            },
-          ],
-        };
+        return toolErrorResponse(err, { tool: 'bulk_action', account, protocol: 'imap' });
       }
     },
   );

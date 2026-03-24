@@ -4,7 +4,7 @@
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-
+import { toolErrorResponse } from '../domain/error-codes.js';
 import type ImapService from '../services/imap.service.js';
 import type { Email, EmailMeta } from '../types/index.js';
 
@@ -170,15 +170,11 @@ export default function registerEmailsTools(server: McpServer, imapService: Imap
           content: [{ type: 'text' as const, text: `${header}\n${emails}` }],
         };
       } catch (err) {
-        return {
-          isError: true,
-          content: [
-            {
-              type: 'text' as const,
-              text: `Failed to list emails: ${err instanceof Error ? err.message : String(err)}`,
-            },
-          ],
-        };
+        return toolErrorResponse(err, {
+          tool: 'list_emails',
+          account: params.account,
+          protocol: 'imap',
+        });
       }
     },
   );
@@ -260,15 +256,7 @@ export default function registerEmailsTools(server: McpServer, imapService: Imap
           content: [{ type: 'text' as const, text: parts.join('\n') }],
         };
       } catch (err) {
-        return {
-          isError: true,
-          content: [
-            {
-              type: 'text' as const,
-              text: `Failed to get email: ${err instanceof Error ? err.message : String(err)}`,
-            },
-          ],
-        };
+        return toolErrorResponse(err, { tool: 'get_email', account, protocol: 'imap' });
       }
     },
   );
@@ -401,15 +389,7 @@ export default function registerEmailsTools(server: McpServer, imapService: Imap
           content: [{ type: 'text' as const, text: lines.join('\n') }],
         };
       } catch (err) {
-        return {
-          isError: true,
-          content: [
-            {
-              type: 'text' as const,
-              text: `Failed to get email status: ${err instanceof Error ? err.message : String(err)}`,
-            },
-          ],
-        };
+        return toolErrorResponse(err, { tool: 'get_email_status', account, protocol: 'imap' });
       }
     },
   );
@@ -479,15 +459,11 @@ export default function registerEmailsTools(server: McpServer, imapService: Imap
           content: [{ type: 'text' as const, text: `${header}\n${emails}` }],
         };
       } catch (err) {
-        return {
-          isError: true,
-          content: [
-            {
-              type: 'text' as const,
-              text: `Failed to search emails: ${err instanceof Error ? err.message : String(err)}`,
-            },
-          ],
-        };
+        return toolErrorResponse(err, {
+          tool: 'search_emails',
+          account: params.account,
+          protocol: 'imap',
+        });
       }
     },
   );

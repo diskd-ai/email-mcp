@@ -139,12 +139,18 @@ function loadFromEnv(): RawAppConfig | null {
 // ---------------------------------------------------------------------------
 
 async function loadFromFile(filePath: string = CONFIG_FILE): Promise<RawAppConfig | null> {
+  let content: string;
   try {
-    const content = await fs.readFile(filePath, 'utf-8');
-    const parsed = parseTOML(content);
-    return parsed as unknown as RawAppConfig;
+    content = await fs.readFile(filePath, 'utf-8');
   } catch {
     return null;
+  }
+  try {
+    return parseTOML(content) as unknown as RawAppConfig;
+  } catch (err) {
+    throw new ConfigurationError(
+      `Failed to parse config file at ${filePath}: ${err instanceof Error ? err.message : String(err)}`,
+    );
   }
 }
 
@@ -271,23 +277,38 @@ export async function loadRawConfig(configPath?: string): Promise<RawAppConfig> 
   return AppConfigFileSchema.parse(fileConfig);
 }
 
+function validateConfig(raw: unknown, source: string): RawAppConfig {
+  try {
+    return AppConfigFileSchema.parse(raw);
+  } catch (err) {
+    let detail: string;
+    if (err instanceof Error && 'issues' in err) {
+      const { issues } = err as { issues: { path: (string | number)[]; message: string }[] };
+      detail = issues
+        .map((i) => (i.path.length ? `${i.path.join('.')}: ${i.message}` : i.message))
+        .join('; ');
+    } else {
+      detail = err instanceof Error ? err.message : String(err);
+    }
+    throw new ConfigurationError(`Invalid ${source} configuration: ${detail}`);
+  }
+}
+
 /**
  * Load and validate configuration from env vars or TOML file.
- * Throws on validation errors.
+ * Throws ConfigurationError on missing config or validation errors.
  */
 export async function loadConfig(configPath?: string): Promise<AppConfig> {
   // 1. Try environment variables first
   const envConfig = loadFromEnv();
   if (envConfig) {
-    const validated = AppConfigFileSchema.parse(envConfig);
-    return normalizeConfig(validated);
+    return normalizeConfig(validateConfig(envConfig, 'environment variable'));
   }
 
   // 2. Fall back to TOML config file
   const fileConfig = await loadFromFile(configPath);
   if (fileConfig) {
-    const validated = AppConfigFileSchema.parse(fileConfig);
-    return normalizeConfig(validated);
+    return normalizeConfig(validateConfig(fileConfig, 'config file'));
   }
 
   throw new ConfigurationError(

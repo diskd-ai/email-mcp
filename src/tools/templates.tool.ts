@@ -6,6 +6,7 @@
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { toolErrorResponse } from '../domain/error-codes.js';
 import audit from '../safety/audit.js';
 
 import type ImapService from '../services/imap.service.js';
@@ -51,15 +52,7 @@ export function registerTemplateReadTools(
           ],
         };
       } catch (err) {
-        return {
-          isError: true,
-          content: [
-            {
-              type: 'text' as const,
-              text: `Failed to list templates: ${err instanceof Error ? err.message : String(err)}`,
-            },
-          ],
-        };
+        return toolErrorResponse(err, { tool: 'list_templates' });
       }
     },
   );
@@ -171,15 +164,7 @@ export function registerTemplateWriteTools(
           ],
         };
       } catch (err) {
-        return {
-          isError: true,
-          content: [
-            {
-              type: 'text' as const,
-              text: `Failed to apply template: ${err instanceof Error ? err.message : String(err)}`,
-            },
-          ],
-        };
+        return toolErrorResponse(err, { tool: 'apply_template', account });
       }
     },
   );

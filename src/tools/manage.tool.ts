@@ -4,6 +4,7 @@
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { classifyError, toolErrorResponse } from '../domain/error-codes.js';
 import audit from '../safety/audit.js';
 import { sanitizeMailboxName } from '../safety/validation.js';
 
@@ -47,23 +48,15 @@ export default function registerManageTools(server: McpServer, imapService: Imap
           ],
         };
       } catch (err) {
-        const errMsg = err instanceof Error ? err.message : String(err);
+        const classified = classifyError(err, { tool: 'move_email', account, protocol: 'imap' });
         await audit.log(
           'move_email',
           account,
           { emailId, sourceMailbox, destinationMailbox },
           'error',
-          errMsg,
+          classified.message,
         );
-        return {
-          isError: true,
-          content: [
-            {
-              type: 'text' as const,
-              text: `Failed to move email: ${errMsg}`,
-            },
-          ],
-        };
+        return toolErrorResponse(err, { tool: 'move_email', account, protocol: 'imap' });
       }
     },
   );
@@ -96,17 +89,15 @@ export default function registerManageTools(server: McpServer, imapService: Imap
           ],
         };
       } catch (err) {
-        const errMsg = err instanceof Error ? err.message : String(err);
-        await audit.log('delete_email', account, { emailId, mailbox, permanent }, 'error', errMsg);
-        return {
-          isError: true,
-          content: [
-            {
-              type: 'text' as const,
-              text: `Failed to delete email: ${errMsg}`,
-            },
-          ],
-        };
+        const classified = classifyError(err, { tool: 'delete_email', account, protocol: 'imap' });
+        await audit.log(
+          'delete_email',
+          account,
+          { emailId, mailbox, permanent },
+          'error',
+          classified.message,
+        );
+        return toolErrorResponse(err, { tool: 'delete_email', account, protocol: 'imap' });
       }
     },
   );
@@ -140,17 +131,15 @@ export default function registerManageTools(server: McpServer, imapService: Imap
           content: [{ type: 'text' as const, text: `${labels[action]}.` }],
         };
       } catch (err) {
-        const errMsg = err instanceof Error ? err.message : String(err);
-        await audit.log('mark_email', account, { id, mailbox, action }, 'error', errMsg);
-        return {
-          isError: true,
-          content: [
-            {
-              type: 'text' as const,
-              text: `Failed to mark email: ${errMsg}`,
-            },
-          ],
-        };
+        const classified = classifyError(err, { tool: 'mark_email', account, protocol: 'imap' });
+        await audit.log(
+          'mark_email',
+          account,
+          { id, mailbox, action },
+          'error',
+          classified.message,
+        );
+        return toolErrorResponse(err, { tool: 'mark_email', account, protocol: 'imap' });
       }
     },
   );

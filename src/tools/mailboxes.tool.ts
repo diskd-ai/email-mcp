@@ -4,7 +4,7 @@
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-
+import { toolErrorResponse } from '../domain/error-codes.js';
 import type ImapService from '../services/imap.service.js';
 
 export default function registerMailboxesTools(server: McpServer, imapService: ImapService): void {
@@ -34,15 +34,7 @@ export default function registerMailboxesTools(server: McpServer, imapService: I
           ],
         };
       } catch (err) {
-        return {
-          isError: true,
-          content: [
-            {
-              type: 'text' as const,
-              text: `Failed to list mailboxes: ${err instanceof Error ? err.message : String(err)}`,
-            },
-          ],
-        };
+        return toolErrorResponse(err, { tool: 'list_mailboxes', account, protocol: 'imap' });
       }
     },
   );

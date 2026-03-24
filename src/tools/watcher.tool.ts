@@ -6,6 +6,7 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { loadRawConfig, saveConfig } from '../config/loader.js';
+import { toolErrorResponse } from '../domain/error-codes.js';
 import type HooksService from '../services/hooks.service.js';
 import NotifierService from '../services/notifier.service.js';
 import { listPresets as listAllPresets } from '../services/presets.js';
@@ -360,15 +361,7 @@ export default function registerWatcherTools(
           content: [{ type: 'text' as const, text: lines.join('\n') }],
         };
       } catch (err) {
-        return {
-          isError: true,
-          content: [
-            {
-              type: 'text' as const,
-              text: `Failed to update alerts config: ${err instanceof Error ? err.message : String(err)}`,
-            },
-          ],
-        };
+        return toolErrorResponse(err, { tool: 'configure_alerts' });
       }
     },
   );

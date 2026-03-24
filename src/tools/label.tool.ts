@@ -8,6 +8,7 @@
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { classifyError, toolErrorResponse } from '../domain/error-codes.js';
 import audit from '../safety/audit.js';
 import { validateLabelName } from '../safety/validation.js';
 
@@ -51,11 +52,7 @@ export default function registerLabelTools(server: McpServer, imapService: ImapS
           content: [{ type: 'text' as const, text: lines.join('\n') }],
         };
       } catch (err) {
-        const errMsg = err instanceof Error ? err.message : String(err);
-        return {
-          isError: true,
-          content: [{ type: 'text' as const, text: `Failed to list labels: ${errMsg}` }],
-        };
+        return toolErrorResponse(err, { tool: 'list_labels', account, protocol: 'imap' });
       }
     },
   );
@@ -86,12 +83,15 @@ export default function registerLabelTools(server: McpServer, imapService: ImapS
           ],
         };
       } catch (err) {
-        const errMsg = err instanceof Error ? err.message : String(err);
-        await audit.log('add_label', account, { emailId, mailbox, label }, 'error', errMsg);
-        return {
-          isError: true,
-          content: [{ type: 'text' as const, text: `Failed to add label: ${errMsg}` }],
-        };
+        const classified = classifyError(err, { tool: 'add_label', account, protocol: 'imap' });
+        await audit.log(
+          'add_label',
+          account,
+          { emailId, mailbox, label },
+          'error',
+          classified.message,
+        );
+        return toolErrorResponse(err, { tool: 'add_label', account, protocol: 'imap' });
       }
     },
   );
@@ -124,12 +124,15 @@ export default function registerLabelTools(server: McpServer, imapService: ImapS
           ],
         };
       } catch (err) {
-        const errMsg = err instanceof Error ? err.message : String(err);
-        await audit.log('remove_label', account, { emailId, mailbox, label }, 'error', errMsg);
-        return {
-          isError: true,
-          content: [{ type: 'text' as const, text: `Failed to remove label: ${errMsg}` }],
-        };
+        const classified = classifyError(err, { tool: 'remove_label', account, protocol: 'imap' });
+        await audit.log(
+          'remove_label',
+          account,
+          { emailId, mailbox, label },
+          'error',
+          classified.message,
+        );
+        return toolErrorResponse(err, { tool: 'remove_label', account, protocol: 'imap' });
       }
     },
   );
@@ -159,12 +162,9 @@ export default function registerLabelTools(server: McpServer, imapService: ImapS
           content: [{ type: 'text' as const, text: `🏷️ Label "${name}" created.` }],
         };
       } catch (err) {
-        const errMsg = err instanceof Error ? err.message : String(err);
-        await audit.log('create_label', account, { name }, 'error', errMsg);
-        return {
-          isError: true,
-          content: [{ type: 'text' as const, text: `Failed to create label: ${errMsg}` }],
-        };
+        const classified = classifyError(err, { tool: 'create_label', account, protocol: 'imap' });
+        await audit.log('create_label', account, { name }, 'error', classified.message);
+        return toolErrorResponse(err, { tool: 'create_label', account, protocol: 'imap' });
       }
     },
   );
@@ -189,12 +189,9 @@ export default function registerLabelTools(server: McpServer, imapService: ImapS
           content: [{ type: 'text' as const, text: `🏷️ Label "${name}" deleted.` }],
         };
       } catch (err) {
-        const errMsg = err instanceof Error ? err.message : String(err);
-        await audit.log('delete_label', account, { name }, 'error', errMsg);
-        return {
-          isError: true,
-          content: [{ type: 'text' as const, text: `Failed to delete label: ${errMsg}` }],
-        };
+        const classified = classifyError(err, { tool: 'delete_label', account, protocol: 'imap' });
+        await audit.log('delete_label', account, { name }, 'error', classified.message);
+        return toolErrorResponse(err, { tool: 'delete_label', account, protocol: 'imap' });
       }
     },
   );
