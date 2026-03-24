@@ -32,6 +32,15 @@ The format follows [Conventional Commits](https://www.conventionalcommits.org/) 
 - add pnpm install and usage instructions - ([13c8d4b](https://github.com/codefuturist/email-mcp/commit/13c8d4bf3006fa4fb5f014eb630006a478082a23))
 
 - - -
+## [v0.3.1](https://github.com/codefuturist/email-mcp/compare/18c2821a9c29cb266d2f0263c0868e261f044b03..v0.3.1) - 2026-03-24
+#### 🐛 Bug Fixes
+- (**ci**) use pnpm for release workflow - ([81fed59](https://github.com/codefuturist/email-mcp/commit/81fed5981b7cb183fd39ca4181918f2e8b3b140d)) - nickgorodilov
+- exit with code 78 (EX_CONFIG) when configuration is missing - ([9883c02](https://github.com/codefuturist/email-mcp/commit/9883c0288f3a3819833f11afa0764399d345e844)) - nickgorodilov
+#### 📚 Documentation
+- update README for diskd-ai fork - ([18c2821](https://github.com/codefuturist/email-mcp/commit/18c2821a9c29cb266d2f0263c0868e261f044b03)) - nickgorodilov
+
+- - -
+
 ## [v0.2.1](https://github.com/codefuturist/email-mcp/compare/bd6f94d6f0d1f7f4beca5aa8061f2892a40f0ce0..v0.2.1) - 2026-02-20
 #### 🐛 Bug Fixes
 - (**labels**) fix critical parameter swap and multiple label bugs - ([bd6f94d](https://github.com/codefuturist/email-mcp/commit/bd6f94d6f0d1f7f4beca5aa8061f2892a40f0ce0)) - Colin
