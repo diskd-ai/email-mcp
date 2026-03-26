@@ -6,6 +6,8 @@
  * consumers (app-service, web UI) can map to user-friendly messages.
  */
 
+import formatImapError from '../utils/imap-error.js';
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -111,7 +113,7 @@ const RULES: readonly Rule[] = [
 // ---------------------------------------------------------------------------
 
 function extractMessage(err: unknown): string {
-  if (err instanceof Error) return err.message;
+  if (err instanceof Error) return formatImapError(err);
   if (typeof err === 'string') return err;
   return String(err ?? 'Unknown error');
 }

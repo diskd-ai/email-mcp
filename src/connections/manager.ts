@@ -11,9 +11,9 @@ import { ImapFlow } from 'imapflow';
 import type { Transporter } from 'nodemailer';
 import nodemailer from 'nodemailer';
 import { mcpLog } from '../logging.js';
-
 import type OAuthService from '../services/oauth.service.js';
 import type { AccountConfig } from '../types/index.js';
+import formatImapError from '../utils/imap-error.js';
 import type { IConnectionManager } from './types.js';
 
 type SmtpAuth =
@@ -66,6 +66,11 @@ export default class ConnectionManager implements IConnectionManager {
 
     // Clean up stale connection
     if (existing) {
+      await mcpLog(
+        'warning',
+        'imap',
+        `Stale connection for "${accountName}" (usable=${existing.usable}), reconnecting`,
+      );
       this.imapClients.delete(accountName);
       try {
         existing.close();
@@ -96,7 +101,18 @@ export default class ConnectionManager implements IConnectionManager {
       logger: false,
     });
 
-    await client.connect();
+    try {
+      await client.connect();
+    } catch (err) {
+      const detail = formatImapError(err);
+      await mcpLog(
+        'error',
+        'imap',
+        `Connect failed for "${accountName}" (${account.imap.host}:${account.imap.port}): ${detail}`,
+      );
+      throw err;
+    }
+
     await mcpLog(
       'info',
       'imap',

@@ -22,6 +22,7 @@ import type {
   QuotaInfo,
   SenderStat,
 } from '../types/index.js';
+import formatImapError from '../utils/imap-error.js';
 import type { LabelStrategy } from './label-strategy.js';
 import { detectLabelStrategy } from './label-strategy.js';
 
@@ -899,7 +900,7 @@ export default class ImapService {
       }
     } catch (err) {
       result.failed = ids.length;
-      result.errors = [err instanceof Error ? err.message : String(err)];
+      result.errors = [formatImapError(err)];
     } finally {
       lock.release();
     }
@@ -933,7 +934,7 @@ export default class ImapService {
       }
     } catch (err) {
       result.failed = ids.length;
-      result.errors = [err instanceof Error ? err.message : String(err)];
+      result.errors = [formatImapError(err)];
     } finally {
       lock.release();
     }
@@ -968,7 +969,7 @@ export default class ImapService {
         }
       } catch (err) {
         result.failed = ids.length;
-        result.errors = [err instanceof Error ? err.message : String(err)];
+        result.errors = [formatImapError(err)];
       } finally {
         lock.release();
       }
@@ -990,7 +991,7 @@ export default class ImapService {
         }
       } catch (err) {
         result.failed = ids.length;
-        result.errors = [err instanceof Error ? err.message : String(err)];
+        result.errors = [formatImapError(err)];
       } finally {
         lock.release();
       }

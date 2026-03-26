@@ -13,6 +13,7 @@
 import { ImapFlow } from 'imapflow';
 import { mcpLog } from '../logging.js';
 import type { AccountConfig, EmailMeta, WatcherConfig } from '../types/index.js';
+import formatImapError from '../utils/imap-error.js';
 import eventBus from './event-bus.js';
 
 // ---------------------------------------------------------------------------
@@ -190,8 +191,13 @@ export default class WatcherService {
         }
       });
 
-      client.on('error', () => {
-        // Error will be followed by 'close' event
+      client.on('error', (err: unknown) => {
+        const detail = formatImapError(err);
+        mcpLog(
+          'warning',
+          'watcher',
+          `IMAP error on ${state.account.name}/${state.folder}: ${detail}`,
+        ).catch(() => {});
       });
 
       await mcpLog(
@@ -200,11 +206,11 @@ export default class WatcherService {
         `IDLE started: ${state.account.name}/${state.folder} (uid > ${uidNext - 1})`,
       );
     } catch (err) {
-      const errMsg = err instanceof Error ? err.message : String(err);
+      const detail = formatImapError(err);
       await mcpLog(
         'warning',
         'watcher',
-        `IDLE connect failed for ${state.account.name}/${state.folder}: ${errMsg}`,
+        `IDLE connect failed for ${state.account.name}/${state.folder}: ${detail}`,
       );
       this.scheduleReconnect(key);
     }
@@ -273,8 +279,8 @@ export default class WatcherService {
         );
       }
     } catch (err) {
-      const errMsg = err instanceof Error ? err.message : String(err);
-      await mcpLog('warning', 'watcher', `Failed to fetch new emails: ${errMsg}`);
+      const detail = formatImapError(err);
+      await mcpLog('warning', 'watcher', `Failed to fetch new emails: ${detail}`);
     }
   }
 
