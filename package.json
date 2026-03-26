@@ -1,6 +1,6 @@
 {
   "name": "@diskd-ai/email-mcp",
-  "version": "0.3.0",
+  "version": "0.3.2",
   "mcpName": "io.github.diskd-ai/email-mcp",
   "description": "Email MCP server with IMAP + SMTP support",
   "type": "module",
