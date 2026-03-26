@@ -18,12 +18,9 @@ jobs:
     with:
       images: |
         ghcr.io/diskd-ai/email-mcp
-        diarmid/email-mcp
       tags: |
         type=sha,prefix=sha-
       alpine-tags: |
         type=sha,prefix=sha-,suffix=-alpine
     secrets:
       GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}

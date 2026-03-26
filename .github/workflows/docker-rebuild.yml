@@ -41,7 +41,6 @@ jobs:
     with:
       images: |
         ghcr.io/diskd-ai/email-mcp
-        diarmid/email-mcp
       tags: |
         type=semver,pattern={{version}},value=v${{ needs.prepare.outputs.version }}
         type=semver,pattern={{version}},suffix=-bookworm,value=v${{ needs.prepare.outputs.version }}
@@ -61,5 +60,3 @@ jobs:
         type=raw,value=alpine,enable=${{ needs.prepare.outputs.is-stable }}
     secrets:
       GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
