@@ -15,6 +15,7 @@ import { mcpLog } from '../logging.js';
 import type { AccountConfig, EmailMeta, WatcherConfig } from '../types/index.js';
 import formatImapError from '../utils/imap-error.js';
 import eventBus from './event-bus.js';
+import type OAuthService from './oauth.service.js';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -66,9 +67,12 @@ export default class WatcherService {
 
   private accounts: AccountConfig[];
 
-  constructor(config: WatcherConfig, accounts: AccountConfig[]) {
+  private oauthService?: OAuthService;
+
+  constructor(config: WatcherConfig, accounts: AccountConfig[], oauthService?: OAuthService) {
     this.config = config;
     this.accounts = accounts;
+    this.oauthService = oauthService;
   }
 
   async start(): Promise<void> {
@@ -145,9 +149,30 @@ export default class WatcherService {
     if (!state || state.stopped) return;
 
     try {
-      const auth = state.account.oauth2
-        ? { user: state.account.username, accessToken: state.account.password }
-        : { user: state.account.username, pass: state.account.password };
+      let auth: { user: string; pass?: string; accessToken?: string };
+      if (state.account.oauth2 && this.oauthService) {
+        try {
+          const accessToken = await this.oauthService.getAccessToken(state.account.oauth2);
+          auth = { user: state.account.username, accessToken };
+        } catch (err) {
+          const detail = err instanceof Error ? err.message : String(err);
+          await mcpLog(
+            'warning',
+            'watcher',
+            `OAuth token refresh failed for ${state.account.name}/${state.folder}: ${detail}. Skipping.`,
+          );
+          return;
+        }
+      } else if (state.account.password) {
+        auth = { user: state.account.username, pass: state.account.password };
+      } else {
+        await mcpLog(
+          'warning',
+          'watcher',
+          `No credentials for ${state.account.name}. Skipping IDLE watcher.`,
+        );
+        return;
+      }
 
       const client = new ImapFlow({
         host: state.account.imap.host,
