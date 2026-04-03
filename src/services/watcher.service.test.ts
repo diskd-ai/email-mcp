@@ -6,6 +6,10 @@ import WatcherService from './watcher.service.js';
 // Track ImapFlow constructor args to verify auth
 const imapFlowInstances: { auth: unknown }[] = [];
 
+// Track event listeners and fetch calls for exists/fetch tests
+const eventListeners: Record<string, ((...args: unknown[]) => void)[]> = {};
+let fetchSpy: ReturnType<typeof vi.fn> | null = null;
+
 // Mock imapflow module
 vi.mock('imapflow', () => {
   class MockImapFlow {
@@ -14,9 +18,18 @@ vi.mock('imapflow', () => {
     connect = vi.fn().mockResolvedValue(undefined);
     logout = vi.fn().mockResolvedValue(undefined);
     getMailboxLock = vi.fn().mockResolvedValue({ release: vi.fn() });
-    on = vi.fn();
+    fetch = vi.fn().mockImplementation(async function* () {
+      // default: yield nothing
+    });
+    on = vi.fn().mockImplementation((event: string, cb: (...args: unknown[]) => void) => {
+      if (!eventListeners[event]) eventListeners[event] = [];
+      eventListeners[event].push(cb);
+    });
     constructor(opts: { auth: unknown }) {
       imapFlowInstances.push({ auth: opts.auth });
+      fetchSpy = this.fetch;
+      // Reset listeners per instance
+      for (const key of Object.keys(eventListeners)) delete eventListeners[key];
     }
   }
   return { ImapFlow: MockImapFlow };
@@ -219,6 +232,52 @@ describe('WatcherService OAuth support', () => {
     const connectedStatuses = status.filter((s) => s.connected);
     expect(connectedStatuses).toHaveLength(1);
     expect(connectedStatuses[0].account).toBe('test');
+
+    await watcher.stop();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// FETCH uid mode
+// ---------------------------------------------------------------------------
+
+describe('WatcherService FETCH uid mode', () => {
+  beforeEach(() => {
+    imapFlowInstances.length = 0;
+    fetchSpy = null;
+    for (const key of Object.keys(eventListeners)) delete eventListeners[key];
+    vi.clearAllMocks();
+  });
+
+  /* REQUIREMENT WATCH-06: handleNewEmails must use UID FETCH, not sequence FETCH.
+     ImapFlow fetch(range, query, options) uses options.uid (3rd arg) to decide
+     between UID FETCH and FETCH. Passing uid:true only in query (2nd arg) adds
+     UID as a data item but still sends plain FETCH with sequence numbers. When
+     lastSeenUid is larger than the message count, plain FETCH fails with
+     "The specified message set is invalid." */
+  it('calls ImapFlow fetch with uid option in 3rd argument', async () => {
+    const watcher = new WatcherService(enabledConfig, [testAccount]);
+    await watcher.start();
+
+    // Simulate exists event (new message arrived)
+    const existsHandlers = eventListeners.exists ?? [];
+    expect(existsHandlers.length).toBeGreaterThan(0);
+    existsHandlers[0]({ path: 'INBOX', count: 2, prevCount: 1 });
+
+    // Give handleNewEmails a tick to execute
+    await new Promise<void>((resolve) => {
+      setTimeout(resolve, 50);
+    });
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    const [range, , options] = fetchSpy!.mock.calls[0];
+
+    // Range should be UID-based (lastSeenUid + 1 = 100, from uidNext=100)
+    expect(range).toBe('100:*');
+
+    // 3rd argument must have uid: true for UID FETCH
+    expect(options).toBeDefined();
+    expect(options).toHaveProperty('uid', true);
 
     await watcher.stop();
   });

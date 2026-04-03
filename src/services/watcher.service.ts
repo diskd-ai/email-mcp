@@ -274,12 +274,11 @@ export default class WatcherService {
       let maxUid = state.lastSeenUid;
 
       // eslint-disable-next-line no-restricted-syntax -- need sequential async iteration
-      for await (const msg of state.client.fetch(searchRange, {
-        uid: true,
-        envelope: true,
-        flags: true,
-        bodyStructure: true,
-      })) {
+      for await (const msg of state.client.fetch(
+        searchRange,
+        { envelope: true, flags: true, bodyStructure: true },
+        { uid: true },
+      )) {
         if (msg.uid > state.lastSeenUid) {
           emails.push(WatcherService.buildEmailMeta(msg));
           maxUid = Math.max(maxUid, msg.uid);
