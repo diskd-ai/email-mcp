@@ -52,7 +52,7 @@ function hasAttachments(bodyStructure: unknown): boolean {
   return false;
 }
 
-function extractAttachments(bodyStructure: unknown): AttachmentMeta[] {
+export function extractAttachments(bodyStructure: unknown): AttachmentMeta[] {
   const attachments: AttachmentMeta[] = [];
   if (!bodyStructure || typeof bodyStructure !== 'object') return attachments;
 
@@ -61,7 +61,9 @@ function extractAttachments(bodyStructure: unknown): AttachmentMeta[] {
     const params = (bs.dispositionParameters ?? bs.parameters ?? {}) as Record<string, string>;
     attachments.push({
       filename: params.filename ?? params.name ?? 'unnamed',
-      mimeType: `${bs.type ?? 'application'}/${bs.subtype ?? 'octet-stream'}`,
+      mimeType: String(bs.type ?? 'application').includes('/')
+        ? String(bs.type)
+        : `${bs.type ?? 'application'}/${bs.subtype ?? 'octet-stream'}`,
       size: (bs.size as number) ?? 0,
     });
   }

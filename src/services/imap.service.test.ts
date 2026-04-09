@@ -1,5 +1,5 @@
 import type { IConnectionManager } from '../connections/types.js';
-import ImapService from './imap.service.js';
+import ImapService, { extractAttachments } from './imap.service.js';
 
 // ---------------------------------------------------------------------------
 // Mock helpers
@@ -164,5 +164,81 @@ describe('ImapService', () => {
 
       expect(client.messageFlagsAdd).toHaveBeenCalledWith('10', ['\\Flagged'], { uid: true });
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// extractAttachments
+// ---------------------------------------------------------------------------
+
+/* REQUIREMENT EMAIL-ATT-01: MIME type parsing from IMAP bodyStructure */
+describe('extractAttachments', () => {
+  it('parses normal split type/subtype correctly', () => {
+    const bs = {
+      disposition: 'attachment',
+      type: 'image',
+      subtype: 'jpeg',
+      size: 47000,
+      dispositionParameters: { filename: '860px.jpeg' },
+    };
+    const result = extractAttachments(bs);
+    expect(result).toHaveLength(1);
+    expect(result[0].mimeType).toBe('image/jpeg');
+    expect(result[0].filename).toBe('860px.jpeg');
+  });
+
+  it('does not double-join when type already contains slash', () => {
+    const bs = {
+      disposition: 'attachment',
+      type: 'image/jpeg',
+      subtype: 'octet-stream',
+      size: 47000,
+      dispositionParameters: { filename: '860px.jpeg' },
+    };
+    const result = extractAttachments(bs);
+    expect(result).toHaveLength(1);
+    expect(result[0].mimeType).toBe('image/jpeg');
+  });
+
+  it('uses full type when type contains slash and subtype is undefined', () => {
+    const bs = {
+      disposition: 'attachment',
+      type: 'application/pdf',
+      size: 12000,
+      dispositionParameters: { filename: 'doc.pdf' },
+    };
+    const result = extractAttachments(bs);
+    expect(result).toHaveLength(1);
+    expect(result[0].mimeType).toBe('application/pdf');
+  });
+
+  it('falls back to application/octet-stream when type and subtype are missing', () => {
+    const bs = {
+      disposition: 'attachment',
+      size: 100,
+      dispositionParameters: { filename: 'file.bin' },
+    };
+    const result = extractAttachments(bs);
+    expect(result).toHaveLength(1);
+    expect(result[0].mimeType).toBe('application/octet-stream');
+  });
+
+  it('extracts attachments from nested childNodes', () => {
+    const bs = {
+      childNodes: [
+        { disposition: 'inline', type: 'text', subtype: 'plain', size: 10 },
+        {
+          disposition: 'attachment',
+          type: 'application',
+          subtype: 'pdf',
+          size: 5000,
+          dispositionParameters: { filename: 'report.pdf' },
+        },
+      ],
+    };
+    const result = extractAttachments(bs);
+    expect(result).toHaveLength(1);
+    expect(result[0].filename).toBe('report.pdf');
+    expect(result[0].mimeType).toBe('application/pdf');
   });
 });
