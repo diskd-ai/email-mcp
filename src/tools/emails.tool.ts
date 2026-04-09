@@ -12,12 +12,6 @@ import type { Email, EmailMeta } from '../types/index.js';
 // Formatting helpers
 // ---------------------------------------------------------------------------
 
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes}B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
-}
-
 function formatEmailMeta(email: EmailMeta): string {
   const flags = [
     email.seen ? '' : '🔵',
@@ -219,41 +213,40 @@ export default function registerEmailsTools(server: McpServer, imapService: Imap
       try {
         const email = await imapService.getEmail(account, emailId, mailbox);
 
-        const parts: string[] = [
-          `📧 ${email.subject}`,
-          `Status: ${formatEmailStatus(email)}`,
-          `From:   ${email.from.name ? `${email.from.name} <${email.from.address}>` : email.from.address}`,
-          `To:     ${email.to.map((a) => (a.name ? `${a.name} <${a.address}>` : a.address)).join(', ')}`,
-        ];
-
-        if (email.cc?.length) {
-          parts.push(`CC:     ${email.cc.map((a) => a.address).join(', ')}`);
-        }
-
-        parts.push(`Date:   ${email.date}`);
-        parts.push(`ID:     ${email.messageId}`);
-
-        if (email.inReplyTo) {
-          parts.push(`Reply:  ${email.inReplyTo}`);
-        }
-
-        if (email.attachments.length > 0) {
-          parts.push(
-            `📎 Attachments: ${email.attachments.map((a) => `${a.filename} (${a.mimeType}, ${formatSize(a.size)})`).join(', ')}`,
-          );
-        }
-
-        parts.push('', '--- Body ---', '');
-        parts.push(
-          applyBodyFormat(email.bodyText, email.bodyHtml, format as BodyFormat, maxLength),
+        const body = applyBodyFormat(
+          email.bodyText,
+          email.bodyHtml,
+          format as BodyFormat,
+          maxLength,
         );
 
         if (markRead) {
           await imapService.setFlags(account, emailId, mailbox, 'read');
         }
 
+        const response = {
+          subject: email.subject,
+          from: { name: email.from.name ?? '', address: email.from.address },
+          to: email.to.map((a) => ({ name: a.name ?? '', address: a.address })),
+          cc: email.cc?.map((a) => ({ name: a.name ?? '', address: a.address })),
+          date: email.date,
+          messageId: email.messageId,
+          inReplyTo: email.inReplyTo,
+          seen: email.seen,
+          flagged: email.flagged,
+          answered: email.answered,
+          labels: email.labels,
+          hasAttachments: email.attachments.length > 0,
+          attachments: email.attachments.map((a) => ({
+            filename: a.filename,
+            contentType: a.mimeType,
+            size: a.size,
+          })),
+          bodyText: body,
+        };
+
         return {
-          content: [{ type: 'text' as const, text: parts.join('\n') }],
+          content: [{ type: 'text' as const, text: JSON.stringify(response) }],
         };
       } catch (err) {
         return toolErrorResponse(err, { tool: 'get_email', account, protocol: 'imap' });
