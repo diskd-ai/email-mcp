@@ -288,8 +288,8 @@ export default class NotifierService {
       await this.sendDesktopNotification(payload);
     }
 
-    // 3. Webhook — if configured + meets webhook event filter
-    if (this.config.webhookUrl && this.config.webhookEvents.includes(payload.priority)) {
+    // 3. Webhook — if configured (always fires for indexing; priority filtering is for desktop/sound only)
+    if (this.config.webhookUrl) {
       this.sendWebhook(payload).catch(() => {});
     }
   }
