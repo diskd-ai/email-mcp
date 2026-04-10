@@ -30,6 +30,7 @@ export interface AlertPayload {
   labels?: string[];
   ruleName?: string;
   uid?: string;
+  messageId?: string;
   folder?: string;
   hasAttachments?: boolean;
 }
@@ -385,6 +386,7 @@ export default class NotifierService {
     const body = JSON.stringify({
       event: `email.${payload.priority}`,
       account: payload.account,
+      messageId: payload.messageId ?? null,
       uid: payload.uid ?? null,
       folder: payload.folder ?? null,
       sender: payload.sender,

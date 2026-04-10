@@ -317,6 +317,7 @@ export default class WatcherService {
     flags?: Set<string>;
     envelope?: {
       subject?: string;
+      messageId?: string;
       from?: { name?: string; address?: string }[];
       to?: { name?: string; address?: string }[];
       date?: Date;
@@ -331,6 +332,7 @@ export default class WatcherService {
 
     return {
       id: String(msg.uid),
+      messageId: msg.envelope?.messageId,
       subject: msg.envelope?.subject ?? '(no subject)',
       from: { name: from?.name, address: from?.address ?? '' },
       to: to.map((a) => ({ name: a.name, address: a.address ?? '' })),

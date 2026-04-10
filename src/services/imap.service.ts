@@ -130,6 +130,7 @@ function messageToEmailMeta(msg: Record<string, unknown>): EmailMeta {
 
   return {
     id: String(msg.uid ?? msg.seq),
+    messageId: (envelope.messageId as string) ?? undefined,
     subject: (envelope.subject as string) ?? '(no subject)',
     from: parseAddress((envelope.from as Record<string, string>[])?.[0]),
     to: parseAddresses(envelope.to as Record<string, string>[]),

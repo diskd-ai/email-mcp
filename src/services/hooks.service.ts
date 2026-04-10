@@ -303,6 +303,7 @@ export default class HooksService {
       labels: actions.labels,
       ruleName: rule.name,
       uid: email.meta.id,
+      messageId: email.meta.messageId,
       folder: email.mailbox,
       hasAttachments: email.meta.hasAttachments,
     };
@@ -356,6 +357,7 @@ export default class HooksService {
         subject: e.meta.subject,
         priority: 'normal',
         uid: e.meta.id,
+        messageId: e.meta.messageId,
         folder: e.mailbox,
         hasAttachments: e.meta.hasAttachments,
       };
@@ -470,6 +472,7 @@ export default class HooksService {
       priority,
       labels: triage.labels,
       uid: email.meta.id,
+      messageId: email.meta.messageId,
       folder: email.mailbox,
       hasAttachments: email.meta.hasAttachments,
     };
